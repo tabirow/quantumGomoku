@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>量子五目並べ</title>
+    <style>
+body{
+  text-align: center;
+}
+
+.container{
+  width: fit-content; 
+  margin-right: auto; 
+  margin-left: auto; 
+}
+
+canvas{
+  border: 1px solid black;
+  display: inline-block;
+}
+
+#check{
+  width: 100px; 
+  height: 50px; 
+  font-size: 1.5em; 
+}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>量子五目並べ</h1>
+      <canvas id="board" width="800" height="800"></canvas><br>
+      <button name="check" id="check">観測</button>
+    </div><!-- #container -->
+<script>
+      const canvas = document.getElementById("board")
+      const checkBtn = document.getElementById("check")
+      const ctx = canvas.getContext("2d")
+      const gridSize = 40
+      const stoneRadius = 16
+      const boardSize = 19
+      
+      let colors = ["#222222", "#dddddd", "#666666", "#999999"]
+      let board = new Array(boardSize).fill(null).map(() => new Array(boardSize).fill(null))
+      let isChecking = false
+      let count = 0
+      let random = 0
+      let currentPlayer = colors[0]
+      
+      function drawGrid() {
+        ctx.strokeStyle = "black"
+        //ctx.fillStyle = "#dcb35c"
+        //ctx.fillRect(0, 0, canvas.width, canvas.height)
+        for (let i = 0; i < boardSize; i++) {
+          ctx.beginPath()
+          ctx.moveTo(gridSize + i * gridSize, gridSize)
+          ctx.lineTo(gridSize + i * gridSize, canvas.height - gridSize)
+          ctx.stroke()
+          ctx.beginPath()
+          ctx.moveTo(gridSize, gridSize + i * gridSize)
+          ctx.lineTo(canvas.width - gridSize, gridSize + i * gridSize)
+          ctx.stroke()
+        }
+      }
+
+      function drawStone(x, y, color, opacity = 1) {
+        ctx.beginPath()
+        ctx.arc(x, y, stoneRadius, 0, 2 * Math.PI)
+        ctx.fillStyle = color
+        ctx.globalAlpha = opacity
+        ctx.fill()
+        ctx.globalAlpha = 1
+      }
+
+      function getMousePosition(event) {
+        const rect = canvas.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
+        return { x, y }
+      }
+     
+      function positionToCoordinate(x, y) {
+        return {
+          row: Math.round((y - gridSize) / gridSize),
+          col: Math.round((x - gridSize) / gridSize),
+        }
+      }
+      
+      function placeStone(row, col, color) {
+        board[row][col] = color
+        drawStone(gridSize + col * gridSize, gridSize + row * gridSize, color)
+      }
+      
+      function isValidMove(row, col) {
+        return row >= 0 && col >= 0 && row < boardSize && col < boardSize && !board[row][col]
+      }
+
+      function randint() {
+        return Math.floor(Math.random() * 10)
+      }
+
+      canvas.addEventListener("mousemove", (event) => {
+        const { x, y } = getMousePosition(event)
+        const { row, col } = positionToCoordinate(x, y)
+        if (isChecking) {
+        }
+        else if (isValidMove(row, col)) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+          drawGrid()
+          board.forEach((row, rowIndex) => row.forEach((stone, colIndex) => {
+            if (stone) {
+              drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, stone)
+            }
+          }))
+          drawStone(gridSize + col * gridSize, gridSize + row * gridSize, currentPlayer, 0.5)
+        }
+      })
+
+      canvas.addEventListener("click", (event) => {
+        const { x, y } = getMousePosition(event)
+        const { row, col } = positionToCoordinate(x, y)
+        if (isValidMove(row, col)) {
+          placeStone(row, col, currentPlayer)
+          count++
+          currentPlayer = colors[count % 4]
+        }
+      })
+
+      checkBtn.addEventListener("click", (event) => {
+        if(isChecking) {
+          document.getElementById("check").textContent = "観測"
+          isChecking = false
+        }
+        else {
+          board.forEach((row, rowIndex) => row.forEach((stone, colIndex) => {
+            if(stone == "#222222") {
+              if(randint() < 9) {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "black")
+              }
+              else {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "white")
+              }
+            }
+            else if(stone == "#666666") {
+              if(randint() < 7) {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "black")
+              }
+              else {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "white")
+              } 
+            }
+            else if(stone == "#999999") {
+              if(randint() < 3) {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "black")
+              }
+              else {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "white")
+              }
+            }
+            else if(stone == "#dddddd") {
+              if(randint() < 1) {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "black")
+              }
+              else {
+                drawStone(gridSize + colIndex * gridSize, gridSize + rowIndex * gridSize, "white")
+              }
+            }
+          }))
+          document.getElementById("check").textContent = "観測中"
+          isChecking = true
+        }
+      })
+      
+      drawGrid()
+</script>
+  </body>
+</html>
